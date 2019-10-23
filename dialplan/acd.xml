@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<include>
+    <context name="acd">
+        <extension name="acd">
+            <condition field="destination_number" expression="^acd$">
+                <!--<action application="answer"/>-->
+                <action application="set" data="fifo_music=/tmp/waiting.wav" />
+                <action application="set" data="fifo_chime_freq=15" />
+                <action application="set" data="fifo_chime_list=/tmp/busy.wav" />
+                <!--<action application="set" data="fifo_orbit_exten=1001:45" />-->
+                <!--<action application="set" data="fifo_orbit_dialplan=XML" />-->
+                <!--<action application="set" data="fifo_orbit_context=default" />-->
+                <action application="set" data="fifo_orbit_announce=/tmp/answer.wav" />
+                <action application="set" data="fifo_override_announce=/tmp/answer_for_agent.wav" />
+                <action application="fifo" data="${queue_name} in"/>
+            </condition>
+        </extension>
+
+        <extension name="call_center">
+            <condition field="destination_number" expression="^call_center$">
+                <action application="set" data="tts_engine=flite"/>
+                <action application="set" data="tts_voice=kal"/>
+                <action application="speak" data="You are ready to enter the default waiting queue, so be patient"/>
+                <action application="callcenter" data="support@default"/>
+            </condition>
+        </extension>
+    </context>
+</include>

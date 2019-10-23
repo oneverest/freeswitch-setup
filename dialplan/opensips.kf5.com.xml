@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    NOTICE:
+
+    This context is usually accessed via authenticated callers on the sip profile on port 5060
+    or transfered callers from the public context which arrived via the sip profile on port 5080.
+
+    Authenticated users will use the user_context variable on the user to determine what context
+    they can access.  You can also add a user in the directory with the cidr= attribute acl.conf.xml
+    will build the domains ACL using this value.
+-->
+<!-- http://wiki.freeswitch.org/wiki/Dialplan_XML -->
+<include>
+    <context name="opensips.kf5.com">
+        <!--<extension name="Check SDP Info" continue="true">-->
+            <!--<condition field="${switch_r_sdp}" expression="/(.*)(o=\w+ 0 0 IN IP4\s+)(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(.*)(c=IN IP4\s+)(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(.*)/s">-->
+                <!--<action application="set" data="switch_r_sdp=$1$2${sip_network_ip}$3$4${sip_network_ip}$5"/>-->
+            <!--</condition>-->
+        <!--</extension>-->
+
+        <extension name="echo">
+            <condition field="destination_number" expression="^(1002|1001)$">
+                <action application="bridge" data="sofia/${context}/$1"/>
+            </condition>
+        </extension>
+
+        <extension name="consult_start">
+            <condition field="destination_number" expression="consult_start">
+                <action application="answer"/>
+                <action application="playback" data="$${hold_music}"/>
+            </condition>
+        </extension>
+
+        <extension name="Show Channel Variables">
+            <condition field="destination_number" expression="^(100[0-3])$">
+                <action application="info"/>
+                <action application="export" data="dialed_extension=$1"/>
+                <action application="set" data="socket_resume=true"/>
+                <!--<action application="set" data="hangup_after_bridge=false"/>-->
+                <action application="set" data="park_after_bridge=true"/>
+                <action application="socket" data="localhost:8040 async full"/>
+                <!--<action application="set" data="continue_on_fail=true"/>-->
+                <!--<action application="bridge" data="sofia/${context}/${dialed_extension}"/>-->
+                <!--<action application="echo"/>-->
+                <!--<action application="answer"/>-->
+                <!--<action application="sleep" data="1000"/>-->
+                <!--<action application="log" data="INFO originate_disposition=${originate_disposition}"/>-->
+                <!--<action application="log" data="INFO DESTINATION_NUMBER [${destination_number}]"/>-->
+                <!--<action application="info"/>-->
+                <!--<action application="bridge" data="loopback/app=voicemail:default ${domain_name} ${dialed_extension}"/>-->
+                <!--<action application="playback" data="$${hold_music}"/>-->
+            </condition>
+        </extension>
+
+        <extension name="Call in test">
+            <condition field="destination_number" expression="^(02881455967)$">
+                <action application="info"/>
+                <action application="export" data="effective_caller_id_number=$1"/>
+                <action application="export" data="effective_caller_id_name=$1"/>
+                <!--<action application="socket" data="localhost:8040 async full"/>-->
+                <action application="bridge" data="sofia/${context}/1000,sofia/${context}/1001,sofia/${context}/1002"/>
+            </condition>
+        </extension>
+
+        <extension name="Call out test">
+            <condition field="destination_number" expression="^(1\d{10}|0\d{9,11})$"/>
+            <condition field="${sofia_contact(1003@${context})}" expression="^(.*)\:.*\@(.*)$">
+                <action application="info"/>
+                <action application="set" data="ringback=${us-ring}"/>
+                <!--<action application="set" data="continue_on_fail=true"/>-->
+                <!--<action application="set" data="hangup_after_bridge=true"/>-->
+                <action application="log" data="${sofia_contact(1003@${context})}"/>
+                <action application="bridge" data="{ignore_early_media=true}$1:${destination_number}@$2"/>
+                <!--<action application="sleep" data="1000"/>-->
+                <!--<action application="answer"/>-->
+                <!--<action application="bridge" data="{ignore_early_media=true}$1:0${destination_number}@$2"/>-->
+            </condition>
+        </extension>
+
+        <!--<extension name="Local_Extension">-->
+            <!--<condition field="destination_number" expression="^(10[01][0-9])$">-->
+                <!--<action application="export" data="dialed_extension=$1"/>-->
+                <!--&lt;!&ndash; bind_meta_app can have these args <key> [a|b|ab] [a|b|o|s] <app> &ndash;&gt;-->
+                <!--<action application="bind_meta_app" data="1 b s execute_extension::dx XML features"/>-->
+                <!--<action application="bind_meta_app" data="2 b s record_session::$${recordings_dir}/${caller_id_number}.${strftime(%Y-%m-%d-%H-%M-%S)}.wav"/>-->
+                <!--<action application="bind_meta_app" data="3 b s execute_extension::cf XML features"/>-->
+                <!--<action application="bind_meta_app" data="4 b s execute_extension::att_xfer XML features"/>-->
+                <!--<action application="set" data="ringback=${us-ring}"/>-->
+                <!--<action application="set" data="transfer_ringback=$${hold_music}"/>-->
+                <!--<action application="set" data="call_timeout=30"/>-->
+                <!--&lt;!&ndash; <action application="set" data="sip_exclude_contact=${network_addr}"/> &ndash;&gt;-->
+                <!--<action application="set" data="hangup_after_bridge=true"/>-->
+                <!--&lt;!&ndash;<action application="set" data="continue_on_fail=NORMAL_TEMPORARY_FAILURE,USER_BUSY,NO_ANSWER,TIMEOUT,NO_ROUTE_DESTINATION"/> &ndash;&gt;-->
+                <!--<action application="set" data="continue_on_fail=true"/>-->
+                <!--<action application="hash" data="insert/${domain_name}-call_return/${dialed_extension}/${caller_id_number}"/>-->
+                <!--<action application="hash" data="insert/${domain_name}-last_dial_ext/${dialed_extension}/${uuid}"/>-->
+                <!--<action application="set" data="called_party_callgroup=${user_data(${dialed_extension}@${domain_name} var callgroup)}"/>-->
+                <!--<action application="hash" data="insert/${domain_name}-last_dial_ext/${called_party_callgroup}/${uuid}"/>-->
+                <!--<action application="hash" data="insert/${domain_name}-last_dial_ext/global/${uuid}"/>-->
+                <!--&lt;!&ndash;<action application="export" data="nolocal:rtp_secure_media=${user_data(${dialed_extension}@${domain_name} var rtp_secure_media)}"/>&ndash;&gt;-->
+                <!--<action application="hash" data="insert/${domain_name}-last_dial/${called_party_callgroup}/${uuid}"/>-->
+                <!--<action application="bridge" data="user/${dialed_extension}@${domain_name}"/>-->
+                <!--<action application="answer"/>-->
+                <!--<action application="sleep" data="1000"/>-->
+                <!--<action application="bridge" data="loopback/app=voicemail:default ${domain_name} ${dialed_extension}"/>-->
+            <!--</condition>-->
+        <!--</extension>-->
+    </context>
+</include>

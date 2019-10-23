@@ -1,0 +1,28 @@
+<!-- http://wiki.freeswitch.org/wiki/Dialplan_XML -->
+<include>
+    <context name="consult">
+
+        <!-- In call Transfer for phones without a transfer button -->
+        <extension name="consult">
+            <condition field="destination_number" expression="consult" break="on-true">
+                <action application="info"/>
+                <!--<action application="answer"/>-->
+                <!--<action application="playback" data="$${hold_music}"/>-->
+                <!--<action application="set" data="park_after_bridge=true"/>-->
+                <action application="socket" data="localhost:8040 async full"/>
+            </condition>
+            <condition field="destination_number" expression="consult_breakup" break="on-true">
+                <action application="info"/>
+                <action application="answer"/>
+                <action application="playback" data="$${hold_music}"/>
+                <!--<action application="socket" data="localhost:8040 async full"/>-->
+            </condition>
+            <condition field="destination_number" expression="test_event">
+                <action application="info"/>
+                <action application="answer"/>
+                <action application="playback" data="$${hold_music}"/>
+                <action application="socket" data="localhost:8044 async full"/>
+            </condition>
+        </extension>
+    </context>
+</include>

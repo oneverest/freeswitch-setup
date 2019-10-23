@@ -1,0 +1,7 @@
+<configuration name="db.conf" description="LIMIT DB Configuration">
+  <settings>
+    <!--<param name="odbc-dsn" value="dsn:user:pass"/>-->
+    <param name="odbc-dsn" value="$${pg_dsn}"/>
+    
+  </settings>
+</configuration>

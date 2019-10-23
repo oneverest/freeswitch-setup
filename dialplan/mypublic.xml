@@ -1,0 +1,152 @@
+<!--
+    NOTICE:
+
+    This context is usually accessed via the external sip profile listening on port 5080.
+
+    It is recommended to have separate inbound and outbound contexts.  Not only for security
+    but clearing up why you would need to do such a thing.  You don't want outside un-authenticated
+    callers hitting your default context which allows dialing calls thru your providers and results
+    in Toll Fraud.
+-->
+
+<!-- http://wiki.freeswitch.org/wiki/Dialplan_XML -->
+<include>
+    <context name="mypublic">
+        <extension name="internal-call">
+            <condition field="destination_number" expression="^(80\d{14})$">
+                <action application="info"/>
+                <action application="lua" data="company.lua"/>
+
+                <!--<action application="answer"/>-->
+                <!--<action application="playback" data="$${base_dir}/sounds/en/us/callie/base256/8000/beaming.wav"/>-->
+                <!--default terminator is *. Keyword 'none' disables on-key termination /-->
+                <!--following line will set # as recording session terminator /-->
+                <!--<action application="set" data="playback_terminators=#"/>-->
+                <!--<action application="record" data="$${recordings_dir}/data.wav 20 200"/>-->
+
+                <!--<action application="set" data="sip_h_X-Call-ID=${sip_call_id}"/>-->
+                <!--<action application="set" data="record_file_name=$${recordings_dir}/${strftime(%Y-%m-%d-%H-%M-%S)}_${uuid}.wav" inline="true"/>-->
+                <action application="set" data="kf5_billing_type=3"/>
+                <action application="export" data="nolocal:kf5_billing_type=4"/>
+                <action application="export" data="kf5_unique_id=${call_uuid}"/>
+                <!--<action application="export" data="execute_on_answer=record_session ${record_file_name}"/>-->
+
+                <!--<action application="lua" data="rate.lua"/>-->
+                <!--<action application="export" data="nolocal:nibble_rate=0.10"/>-->
+                <!--<action application="export" data="nolocal:nibble_account=${sip_to_host}"/>-->
+                <!--<action application="export" data="nolocal:nibble_rounding=3"/>-->
+                <!--<action application="export" data="nolocal:nibble_increment=60"/>-->
+                <!--<action application="bridge" data="sofia/external/$1@${sip_to_host};fs_path=sip:${sip_network_ip}:${sip_network_port}"/>-->
+                <action application="set" data="custom-call-type=2"/>
+                <action application="socket" data="localhost:8040 async full"/>
+            </condition>
+        </extension>
+        <extension name="inbound_pstn">
+            <condition field="destination_number" expression="^(30\d{14})$">
+                <!--<action application="info"/>-->
+                <!--<action application="answer"/>-->
+                <!--<action application="playback" data="$${hold_music}"/>-->
+                <!--<action application="bridge" data="sofia/gateway/opensips"/>-->
+
+                <!--<action application="log" data="mypublic start -&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&ndash;&gt;>>>"/>-->
+                <!--<action application="info"/>-->
+                <!--<action application="set" data="socket_resume=true"/>-->
+                <!--<action application="set" data="park_after_bridge=true"/>-->
+                <!--<action application="log" data="mypublic end <<<<-&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;"/>-->
+                <!--<action application="socket" data="localhost:8040 async full"/>-->
+
+                <!--<action application="info"/>-->
+                <!--<action application="bridge" data="sofia/gateway/opensips/1000@${sip_to_host};fs_path=sip:10.10.32.38:8888"/>-->
+
+
+                <action application="info"/>
+                <action application="lua" data="company.lua"/>
+                <!--<action application="set" data="tts_engine=flite"/>-->
+                <!--<action application="set" data="tts_voice=kal"/>-->
+                <!--<action application="speak" data="You are ready to enter the default waiting queue, so be patient"/>-->
+                <!--<action application="callcenter" data="support@default"/>-->
+
+                <action application="set" data="kf5_unique_id=${call_uuid}"/>
+                <action application="set" data="park_after_bridge=true"/>
+                <action application="set" data="custom-call-type=0"/>
+                <action application="set" data="kf5_billing_type=1"/>
+                <action application="socket" data="localhost:8040 async full"/>
+            </condition>
+        </extension>
+        <extension name="outbound">
+            <condition field="destination_number" expression="^(\d+)$">
+                <action application="info"/>
+                <!-- uncomment the following line in production -->
+                <action application="lua" data="company.lua"/>
+                <!--<action application="lua" data="outbound.lua"/>-->
+                <action application="set" data="sip_h_X-Redirect-To-User=${pstn_account}"/>
+                <!--<action application="set" data="record_file_name=$${recordings_dir}/${strftime(%Y-%m-%d-%H-%M-%S)}_${uuid}.wav" inline="true"/>-->
+                <!--<action application="export" data="execute_on_answer=record_session ${record_file_name}"/>-->
+                <!--<action application="export" data="nolocal:nibble_rate=0.10"/>-->
+                <!--<action application="export" data="nolocal:nibble_account=${sip_to_host}"/>-->
+                <!--<action application="export" data="nolocal:nibble_rounding=3"/>-->
+                <!--<action application="export" data="nolocal:nibble_increment=60"/>-->
+                <action application="set" data="ignore_early_media=false" inline="true"/>
+                <action application="set" data="leg_timeout=60" inline="true"/>
+                <!--<action application="bridge" data="sofia/external/$1@${sip_to_host};fs_path=sip:${sip_network_ip}:${sip_network_port}"/>-->
+                <action application="set" data="kf5_unique_id=${call_uuid}"/>
+                <action application="set" data="custom-call-type=1"/>
+                <!--<action application="export" data="hangup_after_bridge=true"/>-->
+                <action application="export" data="nolocal:park_after_bridge=true"/>
+                <action application="socket" data="localhost:8040 async full"/>
+            </condition>
+        </extension>
+
+        <!--<extension name="unloop">-->
+            <!--<condition field="${unroll_loops}" expression="^true$"/>-->
+            <!--<condition field="${sip_looped_call}" expression="^true$">-->
+                <!--<action application="deflect" data="${destination_number}"/>-->
+            <!--</condition>-->
+        <!--</extension>-->
+        <!--
+        Tag anything pass thru here as an outside_call so you can make sure not
+        to create any routing loops based on the conditions that it came from
+        the outside of the switch.
+        -->
+        <!--<extension name="outside_call" continue="true">-->
+            <!--<condition>-->
+                <!--<action application="set" data="outside_call=true"/>-->
+                <!--<action application="export" data="RFC2822_DATE=${strftime(%a, %d %b %Y %T %z)}"/>-->
+            <!--</condition>-->
+        <!--</extension>-->
+
+        <!--<extension name="call_debug" continue="true">-->
+            <!--<condition field="${call_debug}" expression="^true$" break="never">-->
+                <!--<action application="info"/>-->
+            <!--</condition>-->
+        <!--</extension>-->
+
+        <!--<extension name="public_extensions">-->
+            <!--<condition field="destination_number" expression="^(10[01][0-9])$">-->
+                <!--<action application="transfer" data="$1 XML default"/>-->
+            <!--</condition>-->
+        <!--</extension>-->
+
+        <!--
+        You can place files in the public directory to get included.
+        -->
+        <!--<X-PRE-PROCESS cmd="include" data="public/*.xml"/>-->
+        <!--
+        If you have made it this far lets challenge the caller and if they authenticate
+        lets try what they dialed in the default context. (commented out by default)
+        -->
+        <!--
+        <extension name="check_auth" continue="true">
+          <condition field="${sip_authorized}" expression="^true$" break="never">
+        <anti-action application="respond" data="407"/>
+          </condition>
+        </extension>
+
+        <extension name="transfer_to_default">
+          <condition>
+        <action application="transfer" data="${destination_number} XML default"/>
+          </condition>
+        </extension>
+        -->
+    </context>
+</include>

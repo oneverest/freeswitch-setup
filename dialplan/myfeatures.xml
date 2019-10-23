@@ -1,0 +1,31 @@
+<!-- http://wiki.freeswitch.org/wiki/Dialplan_XML -->
+<include>
+    <context name="myfeatures">
+
+        <!-- In call Transfer for phones without a transfer button -->
+        <extension name="transfer">
+            <condition field="destination_number" expression="inbound_transfer">
+                <action application="log" data="myfeatures ================================================="/>
+                <action application="info"/>
+                <action application="set" data="park_after_bridge=true"/>
+                <action application="socket" data="localhost:8040 async full"/>
+            </condition>
+        </extension>
+
+        <extension name="consult_start">
+            <condition field="destination_number" expression="consult_start">
+                <action application="info"/>
+                <action application="answer"/>
+                <action application="playback" data="$${hold_music}"/>
+            </condition>
+        </extension>
+
+        <extension name="consult">
+            <condition field="destination_number" expression="consult">
+                <action application="info"/>
+                <action application="answer"/>
+                <action application="playback" data="$${hold_music}"/>
+            </condition>
+        </extension>
+    </context>
+</include>
